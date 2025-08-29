@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # Aplicação Ruby legada
+  ruby-app:
+    build: ./ruby-app
+    container_name: ruby-app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4567/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+
+  # Nginx frontend
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      ruby-app:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Stack de observabilidade
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    depends_on:
+      - ruby-app
+    networks:
+      - app-network
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir
+    ports:
+      - "9009:9009"
+      - "9095:9095"
+    volumes:
+      - ./monitoring/mimir.yml:/etc/mimir/mimir.yml:ro
+      - mimir_data:/data/mimir
+    command: --config.file=/etc/mimir/mimir.yml
+    networks:
+      - app-network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: --config.file=/etc/loki/local-config.yaml
+    networks:
+      - app-network
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./monitoring/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo_data:/tmp/tempo
+    command: --config.file=/etc/tempo/tempo.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      - prometheus
+      - mimir
+      - loki
+      - tempo
+    networks:
+      - app-network
+
+volumes:
+  prometheus_data:
+  mimir_data:
+  loki_data:
+  tempo_data:
+  grafana_data:
+
+networks:
+  app-network:
+    driver: bridge
+
