@@ -1,10 +1,9 @@
-version: '3.8'
-
 services:
-  # Aplicação Ruby legada
   ruby-app:
     build: ./ruby-app
     container_name: ruby-app
+    ports:
+      - "4567:4567"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4567/health"]
       interval: 30s
@@ -14,7 +13,6 @@ services:
     networks:
       - app-network
 
-  # Nginx frontend
   nginx:
     build: ./nginx
     container_name: nginx
@@ -26,9 +24,8 @@ services:
     networks:
       - app-network
 
-  # Stack de observabilidade
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.0
     container_name: prometheus
     ports:
       - "9090:9090"
@@ -38,8 +35,6 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--web.enable-admin-api'
     depends_on:
@@ -48,7 +43,7 @@ services:
       - app-network
 
   mimir:
-    image: grafana/mimir:latest
+    image: grafana/mimir:2.13.0
     container_name: mimir
     ports:
       - "9009:9009"
@@ -61,7 +56,7 @@ services:
       - app-network
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.10
     container_name: loki
     ports:
       - "3100:3100"
@@ -74,8 +69,9 @@ services:
       - app-network
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.6.0
     container_name: tempo
+    user: "0"
     ports:
       - "3200:3200"
       - "4317:4317"
@@ -88,7 +84,7 @@ services:
       - app-network
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.2.0
     container_name: grafana
     ports:
       - "3000:3000"
@@ -96,7 +92,6 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
@@ -118,4 +113,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-

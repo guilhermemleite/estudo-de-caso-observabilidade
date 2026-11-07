@@ -56,7 +56,7 @@ end
 
 # Endpoint de métricas para Prometheus
 get '/metrics' do
-  content_type 'text/plain'
+  content_type 'text/plain; version=0.0.4'
   
   metrics_output = []
   metrics_output << "# HELP http_requests_total Total HTTP requests"
@@ -71,6 +71,6 @@ get '/metrics' do
   metrics_output << "# TYPE orders_created_total counter"
   metrics_output << "orders_created_total #{$metrics[:orders_created]}"
   
-  metrics_output.join("\n")
+  metrics_output.join("\n") + "\n"
 end
 
