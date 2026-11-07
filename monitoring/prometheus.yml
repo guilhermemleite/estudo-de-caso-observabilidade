@@ -1,6 +1,11 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: lab-local      # identifica a origem dos dados no Mimir
+
+remote_write:
+  - url: http://mimir:9009/api/v1/push
 
 scrape_configs:
   # Aplicação Ruby - através do Nginx
@@ -24,4 +29,3 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 30s
-
