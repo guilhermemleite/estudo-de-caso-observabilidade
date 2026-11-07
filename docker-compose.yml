@@ -102,6 +102,25 @@ services:
       - tempo
     networks:
       - app-network
+  
+  alloy:
+    image: grafana/alloy:v1.4.2
+    container_name: alloy
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    networks:
+      - app-network
 
 volumes:
   prometheus_data:
@@ -109,6 +128,7 @@ volumes:
   loki_data:
   tempo_data:
   grafana_data:
+  alloy_data:
 
 networks:
   app-network:
