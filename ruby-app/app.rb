@@ -92,3 +92,18 @@ get '/metrics' do
 
   metrics_output.join("\n") + "\n"
 end
+
+# --- Log estruturado com correlação de trace ------------------------------
+# Sem isso, o Ruby faz buffer do stdout fora de um terminal e os logs
+# chegam atrasados (ou nunca) no Docker/Alloy/Loki.
+$stdout.sync = true
+
+after do
+  ctx = OpenTelemetry::Trace.current_span.context
+  next unless ctx.valid?   # /health e /metrics não têm trace (untraced)
+
+  puts "level=info msg=\"request completed\" " \
+       "method=#{request.request_method} path=#{request.path_info} " \
+       "status=#{response.status} " \
+       "traceID=#{ctx.hex_trace_id} spanID=#{ctx.hex_span_id}"
+end
