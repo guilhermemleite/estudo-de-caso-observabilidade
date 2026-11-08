@@ -299,25 +299,29 @@ Os itens de ação estão detalhados no
 
 ## Estrutura do repositório
 
-├── Makefile # atalhos: make up, make health, make chaos-latency...
+```
+.
+├── Makefile                      # atalhos: make up, make health, make chaos-latency...
 ├── docker-compose.yml
-├── ruby-app/ # aplicação Sinatra instrumentada (Prometheus + OpenTelemetry)
-├── nginx/ # proxy reverso
+├── ruby-app/                     # aplicação Sinatra instrumentada (Prometheus + OpenTelemetry)
+├── nginx/                        # proxy reverso
 ├── monitoring/
-│ ├── prometheus.yml
-│ ├── rules/ # recording rules de SLO e regras de alerta
-│ ├── alertmanager.yml # rotas page/ticket e inibição
-│ ├── alert-receiver.py # receptor de webhook (notificações → stdout → Loki)
-│ ├── config.alloy # coleta de logs dos containers
-│ ├── mimir.yml · loki.yml · tempo.yml
-│ ├── datasources.yml # datasources do Grafana, com correlação log ↔ trace
-│ ├── grafana-dashboards.yml # provisionamento de dashboards
-│ └── dashboards/ # dashboards como código
-├── scripts/ # tráfego, healthcheck e injeção de falhas
+│   ├── prometheus.yml
+│   ├── rules/                    # recording rules de SLO e regras de alerta
+│   ├── alertmanager.yml          # rotas page/ticket e inibição
+│   ├── alert-receiver.py         # receptor de webhook (notificações → stdout → Loki)
+│   ├── config.alloy              # coleta de logs dos containers
+│   ├── mimir.yml · loki.yml · tempo.yml
+│   ├── datasources.yml           # datasources do Grafana, com correlação log ↔ trace
+│   ├── grafana-dashboards.yml    # provisionamento de dashboards
+│   └── dashboards/               # dashboards como código
+├── scripts/                      # tráfego, healthcheck e injeção de falhas
 └── docs/
-├── img/ # evidências (prints)
-├── dashboards/ # dashboard da primeira versão (histórico)
-└── postmortems/ # notas de incidente e postmortem
+    ├── img/                      # evidências (prints)
+    ├── dashboards/               # dashboard da primeira versão (histórico)
+    └── postmortems/              # notas de incidente e postmortem
+```
+
 ---
 
 ## Autor
