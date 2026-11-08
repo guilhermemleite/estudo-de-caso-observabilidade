@@ -4,3 +4,8 @@ gem 'sinatra', '~> 3.0'
 gem 'json', '~> 2.6'
 gem 'puma', '~> 6.0'
 
+# OpenTelemetry (traces -> Tempo via OTLP/HTTP)
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'
+gem 'opentelemetry-instrumentation-rack'
+gem 'opentelemetry-instrumentation-sinatra'

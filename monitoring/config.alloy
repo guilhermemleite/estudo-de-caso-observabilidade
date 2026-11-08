@@ -1,0 +1,46 @@
+// Descobre os containers deste projeto via Docker socket.
+// O filtro evita coletar logs de outros projetos da máquina (ex.: GLPI).
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=estudo-de-caso-observabilidade"]
+  }
+}
+
+// Transforma metadados do Docker em labels do Loki.
+discovery.relabel "containers" {
+  targets = []
+
+  // "/ruby-app" -> "ruby-app"
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  // nome do serviço no docker-compose
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+// Lê os logs (stdout/stderr) dos containers descobertos.
+loki.source.docker "containers" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.containers.targets
+  relabel_rules = discovery.relabel.containers.rules
+  forward_to    = [loki.write.local.receiver]
+}
+
+// Envia para o Loki.
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+  external_labels = {
+    cluster = "lab-local",
+  }
+}
