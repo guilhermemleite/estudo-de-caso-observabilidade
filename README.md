@@ -2,7 +2,7 @@
 
 Uma aplicação Ruby legada instrumentada com os **três pilares da observabilidade**
 (métricas, logs e traces correlacionados), **SLOs com alertas de burn rate**,
-**Game Days** com injeção de falhas e **postmortem blameless** — tudo como código,
+**Game Days** com injeção de falhas e **postmortem blameless** - tudo como código,
 rodando com um comando.
 
 ![Dashboard RED & SLO durante um Game Day de latência](docs/img/17a-dashboard-red-slo.png)
@@ -206,7 +206,7 @@ Provisionado como código em
 SLOs, Rate/Errors/Duration por rota, burn rate com linhas de limiar, linha do
 tempo dos alertas e logs de erro ou lentidão com link para o trace.
 
-![Dashboard RED & SLO — burn rate, alertas e logs](docs/img/17b-dashboard-red-slo.png)
+![Dashboard RED & SLO - burn rate, alertas e logs](docs/img/17b-dashboard-red-slo.png)
 
 ### Game Days
 
@@ -218,7 +218,7 @@ taxa de erro e a latência em tempo real. Foram conduzidos dois exercícios:
    crítico e de aviso disparados, roteados e resolvidos.
 
 📄 **[Postmortem do Game Day de latência](docs/postmortems/2026-11-08-degradacao-latencia.md)**
-— linha do tempo, MTTD, causa raiz, itens de ação e lições aprendidas.
+- linha do tempo, MTTD, causa raiz, itens de ação e lições aprendidas.
 
 ---
 
@@ -248,7 +248,7 @@ taxa de erro e a latência em tempo real. Foram conduzidos dois exercícios:
   com o sistema.
 - **Percentis de histograma são estimativas**: durante o Game Day, o p95
   calculado foi ~0,9 s, mas o real era ~0,58 s. O `histogram_quantile`
-  interpola linearmente dentro do balde (0,5 s–1 s].
+  interpola linearmente dentro do balde (0,5 s-1 s].
 - **Error budget precisa de histórico**: o mesmo incidente consumiu ~6% do
   orçamento mensal de latência, mas o painel mostrou -1.013% porque a janela
   de 30 dias tinha só ~1h30 de dados.
@@ -283,7 +283,7 @@ Os itens de ação estão detalhados no
 
 ## Roadmap
 
-**Versão 2 — Kubernetes e automação:**
+**Versão 2 - Kubernetes e automação:**
 
 - [ ] Migrar para **k3s** com **Helm** (charts da stack LGTM e da aplicação)
 - [ ] Infraestrutura com **Terraform**
@@ -326,7 +326,7 @@ Os itens de ação estão detalhados no
 
 ## Autor
 
-**Guilherme Moreira Leite** — Observabilidade e SRE
+**Guilherme Moreira Leite** - Observabilidade e SRE
 
 [LinkedIn](https://www.linkedin.com/in/guilhermemleite/) ·
 [GitHub](https://github.com/guilhermemleite)
