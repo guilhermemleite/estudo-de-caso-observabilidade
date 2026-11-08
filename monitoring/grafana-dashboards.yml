@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: estudo-de-caso
+    folder: Estudo de Caso
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true          # permite ajustes pela UI (o arquivo continua sendo a fonte)
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards

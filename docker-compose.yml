@@ -38,6 +38,7 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
+      - ./monitoring/rules:/etc/prometheus/rules:ro
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -101,6 +102,8 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./monitoring/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - prometheus
       - mimir
@@ -125,6 +128,28 @@ services:
       - /etc/alloy/config.alloy
     depends_on:
       - loki
+    networks:
+      - app-network
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    networks:
+      - app-network
+
+  alert-receiver:
+    image: python:3.12-alpine
+    container_name: alert-receiver
+    volumes:
+      - ./monitoring/alert-receiver.py:/app/receiver.py:ro
+    command: ["python", "/app/receiver.py"]
     networks:
       - app-network
 
