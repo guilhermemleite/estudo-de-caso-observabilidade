@@ -4,6 +4,12 @@ services:
     container_name: ruby-app
     ports:
       - "4567:4567"
+    environment:
+      - OTEL_SERVICE_NAME=ruby-app
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_TRACES_EXPORTER=otlp
+    depends_on:
+      - tempo
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4567/health"]
       interval: 30s
