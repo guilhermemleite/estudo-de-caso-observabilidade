@@ -25,3 +25,31 @@
 ## Evidências
 - docs/img/12-slo-burn-rate.png
 - docs/img/13-falha-logs-traces.png
+
+---
+
+# Incidente 2 — degradação de latência
+
+## Linha do tempo (horário de Brasília)
+| Horário   | Evento |
+|-----------|--------|
+| ~17:19:30 | Início: latência injetada de 400 ms (±50%) em /products e /orders |
+| 17:20     | slo:burn_rate:ratio_rate5m (latency) começa a subir |
+| ~17:25    | Burn rate 5m estabiliza em ~88x; p95 estimado em ~0,9 s |
+| 17:28:48  | SLOErrorBudgetBurnSlow -> Pending (burn 6h = 7,2x) |
+| 17:42:48  | SLOErrorBudgetBurnFast -> Pending |
+| 17:43:48  | SLOErrorBudgetBurnSlow -> Firing -> notificação no canal "ticket" |
+| 17:44:48  | SLOErrorBudgetBurnFast -> Firing (burn 1h = 18,4x) -> canal "page"; aviso passa a ser inibido |
+| 17:50:57  | Falha desligada (latency_ms=0) |
+
+## Observações
+- MTTD de ~24 min até o primeiro alerta, para um burn de ~87x. Causas:
+  1. Janelas longas (1h/6h) diluídas por tráfego saudável anterior à falha.
+  2. Gerador de carga de ciclo fechado: a latência reduziu o tráfego de ~7 para ~1,9 req/s
+     (coordinated omission), diminuindo o peso das requisições lentas.
+- O aviso (ticket) disparou 1 min antes do crítico (page): o plantão recebeu dois
+  alertas para o mesmo problema. A inibição só suprime enquanto o crítico está ativo.
+- p95 estimado em ~0,9 s, mas o real era ~0,58 s: histogram_quantile interpola
+  linearmente dentro do balde (0,5–1 s]. O SLI de latência é exato porque
+  250 ms é limite de balde (le="0.25").
+- Disponibilidade não foi afetada (burn de availability = 0).

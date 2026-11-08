@@ -7,6 +7,11 @@ global:
 rule_files:
   - /etc/prometheus/rules/*.yml
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 remote_write:
   - url: http://mimir:9009/api/v1/push
 
@@ -32,3 +37,8 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 30s
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']

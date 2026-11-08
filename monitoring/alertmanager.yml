@@ -1,0 +1,26 @@
+route:
+  receiver: ticket                  # padrão: fila de chamados
+  group_by: ['alertname', 'slo']
+  group_wait: 30s                   # espera para agrupar alertas relacionados
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers: ['severity="critical"']
+      receiver: page                # crítico: plantão
+      repeat_interval: 30m
+
+receivers:
+  - name: page
+    webhook_configs:
+      - url: http://alert-receiver:5001/page
+        send_resolved: true
+  - name: ticket
+    webhook_configs:
+      - url: http://alert-receiver:5001/ticket
+        send_resolved: true
+
+# Se o crítico de um SLO está disparando, o aviso do mesmo SLO é redundante
+inhibit_rules:
+  - source_matchers: ['severity="critical"']
+    target_matchers: ['severity="warning"']
+    equal: ['slo']

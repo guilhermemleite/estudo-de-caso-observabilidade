@@ -1,0 +1,43 @@
+# Alertas de SLO por burn rate em múltiplas janelas (Google SRE Workbook, cap. 5)
+#   Crítico: 2% do orçamento mensal em 1h  -> burn 14,4x (janelas 1h + 5m)
+#   Aviso:   5% do orçamento mensal em 6h  -> burn 6x    (janelas 6h + 30m)
+# A janela longa evita disparo por pico isolado; a curta faz o alerta
+# resolver rápido depois que o problema é corrigido.
+
+groups:
+  - name: slo-alerts
+    rules:
+      - alert: SLOErrorBudgetBurnFast
+        expr: |
+          slo:burn_rate:ratio_rate1h > 14.4
+          and on(slo)
+          slo:burn_rate:ratio_rate5m > 14.4
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Queima rápida do error budget (SLO {{ $labels.slo }})"
+          description: "Burn rate de 1h em {{ $value | printf \"%.1f\" }}x. Nesse ritmo, 2% do orçamento mensal é consumido a cada hora."
+
+      - alert: SLOErrorBudgetBurnSlow
+        expr: |
+          slo:burn_rate:ratio_rate6h > 6
+          and on(slo)
+          slo:burn_rate:ratio_rate30m > 6
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Queima sustentada do error budget (SLO {{ $labels.slo }})"
+          description: "Burn rate de 6h em {{ $value | printf \"%.1f\" }}x. Nesse ritmo, 5% do orçamento mensal é consumido a cada 6 horas."
+
+  - name: availability-alerts
+    rules:
+      - alert: RubyAppDown
+        expr: up{job="ruby-app-direct"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ruby-app fora do ar"
+          description: "O Prometheus não consegue coletar métricas do ruby-app há mais de 1 minuto."
