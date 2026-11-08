@@ -4,6 +4,9 @@ gem 'sinatra', '~> 3.0'
 gem 'json', '~> 2.6'
 gem 'puma', '~> 6.0'
 
+# Métricas Prometheus (RED: Rate, Errors, Duration)
+gem 'prometheus-client', '~> 4.2'
+
 # OpenTelemetry (traces -> Tempo via OTLP/HTTP)
 gem 'opentelemetry-sdk'
 gem 'opentelemetry-exporter-otlp'

@@ -2,7 +2,10 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: lab-local      # identifica a origem dos dados no Mimir
+    cluster: lab-local
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
 
 remote_write:
   - url: http://mimir:9009/api/v1/push
@@ -16,7 +19,7 @@ scrape_configs:
     scrape_interval: 10s
     scrape_timeout: 5s
 
-  # Aplicação Ruby - diretamente
+  # Aplicação Ruby - diretamente (fonte dos SLIs)
   - job_name: 'ruby-app-direct'
     static_configs:
       - targets: ['ruby-app:4567']

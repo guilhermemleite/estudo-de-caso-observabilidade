@@ -1,0 +1,104 @@
+# SLOs do ruby-app
+#   availability: 99,5% das requisições sem erro 5xx
+#   latency:      99%   das requisições em <= 250 ms
+# Convenção de nomes: nível:métrica:operação
+
+groups:
+  # --- SLI: disponibilidade ---
+  - name: slo-sli-availability
+    interval: 30s
+    rules:
+      - record: slo:sli_error:ratio_rate5m
+        labels: { slo: availability }
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders",status=~"5.."}[5m]))
+          / sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[5m]))
+      - record: slo:sli_error:ratio_rate30m
+        labels: { slo: availability }
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders",status=~"5.."}[30m]))
+          / sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[30m]))
+      - record: slo:sli_error:ratio_rate1h
+        labels: { slo: availability }
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders",status=~"5.."}[1h]))
+          / sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[1h]))
+      - record: slo:sli_error:ratio_rate6h
+        labels: { slo: availability }
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders",status=~"5.."}[6h]))
+          / sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[6h]))
+      - record: slo:sli_error:ratio_rate30d
+        labels: { slo: availability }
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders",status=~"5.."}[30d]))
+          / sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[30d]))
+
+  # --- SLI: latência (<= 250 ms) ---
+  - name: slo-sli-latency
+    interval: 30s
+    rules:
+      - record: slo:sli_error:ratio_rate5m
+        labels: { slo: latency }
+        expr: |
+          1 - (
+            sum(rate(http_request_duration_seconds_bucket{job="ruby-app-direct",route=~"/products|/orders",le="0.25"}[5m]))
+            / sum(rate(http_request_duration_seconds_count{job="ruby-app-direct",route=~"/products|/orders"}[5m]))
+          )
+      - record: slo:sli_error:ratio_rate30m
+        labels: { slo: latency }
+        expr: |
+          1 - (
+            sum(rate(http_request_duration_seconds_bucket{job="ruby-app-direct",route=~"/products|/orders",le="0.25"}[30m]))
+            / sum(rate(http_request_duration_seconds_count{job="ruby-app-direct",route=~"/products|/orders"}[30m]))
+          )
+      - record: slo:sli_error:ratio_rate1h
+        labels: { slo: latency }
+        expr: |
+          1 - (
+            sum(rate(http_request_duration_seconds_bucket{job="ruby-app-direct",route=~"/products|/orders",le="0.25"}[1h]))
+            / sum(rate(http_request_duration_seconds_count{job="ruby-app-direct",route=~"/products|/orders"}[1h]))
+          )
+      - record: slo:sli_error:ratio_rate6h
+        labels: { slo: latency }
+        expr: |
+          1 - (
+            sum(rate(http_request_duration_seconds_bucket{job="ruby-app-direct",route=~"/products|/orders",le="0.25"}[6h]))
+            / sum(rate(http_request_duration_seconds_count{job="ruby-app-direct",route=~"/products|/orders"}[6h]))
+          )
+      - record: slo:sli_error:ratio_rate30d
+        labels: { slo: latency }
+        expr: |
+          1 - (
+            sum(rate(http_request_duration_seconds_bucket{job="ruby-app-direct",route=~"/products|/orders",le="0.25"}[30d]))
+            / sum(rate(http_request_duration_seconds_count{job="ruby-app-direct",route=~"/products|/orders"}[30d]))
+          )
+
+  # --- Objetivos, burn rate e orçamento ---
+  - name: slo-budget
+    interval: 30s
+    rules:
+      - record: slo:objective:ratio
+        labels: { slo: availability }
+        expr: vector(0.995)
+      - record: slo:objective:ratio
+        labels: { slo: latency }
+        expr: vector(0.99)
+
+      # Taxa de erro permitida (o "orçamento")
+      - record: slo:error_budget:ratio
+        expr: 1 - slo:objective:ratio
+
+      # Burn rate = taxa de erro observada / taxa de erro permitida
+      - record: slo:burn_rate:ratio_rate5m
+        expr: slo:sli_error:ratio_rate5m / on(slo) slo:error_budget:ratio
+      - record: slo:burn_rate:ratio_rate30m
+        expr: slo:sli_error:ratio_rate30m / on(slo) slo:error_budget:ratio
+      - record: slo:burn_rate:ratio_rate1h
+        expr: slo:sli_error:ratio_rate1h / on(slo) slo:error_budget:ratio
+      - record: slo:burn_rate:ratio_rate6h
+        expr: slo:sli_error:ratio_rate6h / on(slo) slo:error_budget:ratio
+
+      # Orçamento restante na janela de 30 dias (1 = intacto, 0 = esgotado, < 0 = SLO violado)
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - (slo:sli_error:ratio_rate30d / on(slo) slo:error_budget:ratio)
