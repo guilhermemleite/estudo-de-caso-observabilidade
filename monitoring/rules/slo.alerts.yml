@@ -41,3 +41,18 @@ groups:
         annotations:
           summary: "ruby-app fora do ar"
           description: "O Prometheus não consegue coletar métricas do ruby-app há mais de 1 minuto."
+
+  - name: traffic-alerts
+    rules:
+      # Silêncio não é saúde: sem tráfego, os SLIs viram 0/0 e os alertas
+      # de SLO deixam de avaliar. Este alerta cobre esse ponto cego.
+      - alert: RubyAppNoTraffic
+        expr: |
+          sum(rate(http_requests_total{job="ruby-app-direct",route=~"/products|/orders"}[5m])) == 0
+          or absent(http_requests_total{job="ruby-app-direct"})
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ruby-app sem tráfego de negócio"
+          description: "Nenhuma requisição em /products ou /orders nos últimos 5 minutos. Os alertas de SLO não conseguem avaliar sem tráfego."
